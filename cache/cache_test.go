@@ -1,45 +1,29 @@
 package cache_test
 
 import (
-	"sandbox/cache"
-	"sort"
-
 	"testing"
+	"time"
+
+	"github.com/kevinstrong/cache"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestCachePutThingsIn(t *testing.T) {
-	set := cache.New[string]()
-	set.Add("b")
-	set.Add("d")
+func TestCacheExpiration(t *testing.T) {
+	expiration := 1000 * time.Millisecond
+	c := cache.New[string](expiration)
 
-	setTwo := cache.New[string]()
-	setTwo.Add("c")
-	setTwo.Add("e")
+	testString := "/v1/users/1"
+	c.Add(testString)
 
-	unionSet := set.Union(*setTwo)
-	got := unionSet.Members()
-	sort.Slice(got, func(i, j int) bool {
-		return got[i] < got[j]
-	})
-	want := []string{"b", "c", "d", "e"}
-	if !cmp.Equal(got, want) {
-		t.Fatalf(cmp.Diff(want, got))
+	if !cmp.Equal(c.Members(), []string{testString}) {
+		t.Fatal(cmp.Diff(c.Members(), []string{testString}))
 	}
-}
 
-func TestConcurrency(t *testing.T) {
-	s := cache.New[int]()
+	time.Sleep(expiration)
 
-	go func() {
-		for i := 0; i < 1000; i++ {
-			s.Members()
-		}
-	}()
-
-	for i := 0; i < 1000; i++ {
-		s.Add(i)
+	if !cmp.Equal(c.Members(), []string{}) {
+		t.Fatal(cmp.Diff(c.Members(), []string{}))
 	}
 
 }
