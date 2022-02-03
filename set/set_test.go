@@ -42,3 +42,14 @@ func TestConcurrency(t *testing.T) {
 	}
 
 }
+
+func TestContains(t *testing.T) {
+	s := set.New[int]()
+	if s.Contains(1) {
+		t.Error("sets should not contain element before it's added")
+	}
+	s.Add(1)
+	if !s.Contains(1) {
+		t.Error("set should contain element it added")
+	}
+}

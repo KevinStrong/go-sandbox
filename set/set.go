@@ -40,3 +40,11 @@ func (set Set[E]) Members() []E {
 	}
 	return members
 }
+
+func (set Set[E]) Contains(element E) bool {
+	set.lock.Lock()
+	defer set.lock.Unlock()
+
+	_, ok := set.data[element]
+	return ok
+}
