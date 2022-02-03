@@ -53,3 +53,19 @@ func TestContains(t *testing.T) {
 		t.Error("set should contain element it added")
 	}
 }
+
+func TestDelete(t *testing.T) {
+	s := set.New[int]()
+
+	testValue := 1
+	s.Add(testValue)
+	if !s.Contains(testValue) {
+		t.Error("set is missing testValue after it's added")
+	}
+
+	s.Delete(testValue)
+
+	if s.Contains(testValue) {
+		t.Error("set has testValue after it's deleted")
+	}
+}
