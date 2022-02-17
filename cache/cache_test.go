@@ -9,7 +9,9 @@ import (
 
 func TestCacheExpiration(t *testing.T) {
 	expiration := 5 * time.Millisecond
-	c := cache.NewWithExpiry[string](expiration)
+	c := cache.New[string](
+		cache.WithLifetime[string](expiration),
+	)
 
 	testString := "/v1/users/1"
 	c.Add(testString)
@@ -27,7 +29,9 @@ func TestCacheExpiration(t *testing.T) {
 
 func TestCacheExpiration_DoubleAdd(t *testing.T) {
 	expiration := 1000 * time.Millisecond
-	c := cache.NewWithExpiry[string](expiration)
+	c := cache.New[string](
+		cache.WithLifetime[string](expiration),
+	)
 
 	testString := "/v1/users/1"
 	c.Add(testString)

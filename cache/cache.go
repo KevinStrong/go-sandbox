@@ -1,29 +1,67 @@
 package cache
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/kevinstrong/set"
 )
 
 type Cache[E comparable] struct {
-	set           *set.Set[E]
-	validDuration time.Duration
-	cancelMap     map[E]chan struct{}
+	set   *set.Set[E]
+	adder Add[E]
 }
 
-func NewWithExpiry[E comparable](expiration time.Duration) *Cache[E] {
-	return &Cache[E]{
-		set:           set.New[E](),
-		validDuration: expiration,
-		cancelMap:     map[E]chan struct{}{},
+type Add[E comparable] func(...E)
+
+func WithLifetime[E comparable](expiration time.Duration) Option[E] {
+	cancelMap := map[E]chan struct{}{}
+	return func(c *Cache[E]) {
+		cancelMap = map[E]chan struct{}{}
+		c.adder = func(elements ...E) {
+			for _, value := range elements {
+				value := value
+
+				cancelChan, ok := cancelMap[value]
+				if ok {
+					close(cancelChan)
+				}
+
+				c.set.Add(value)
+
+				timer := time.NewTimer(expiration)
+				cancelChan = make(chan struct{})
+				cancelMap[value] = cancelChan
+				go func() {
+					kevin := value
+					select {
+					case <-timer.C:
+						fmt.Printf("----------Hello!\n")
+						fmt.Printf("----------Timeout of kevin: %v\n", kevin)
+						c.set.Delete(kevin)
+					case <-cancelChan:
+						fmt.Printf("----------Timeout Cancelled for: %v\n", kevin)
+						return
+					}
+				}()
+			}
+		}
 	}
 }
 
-func New[E comparable]() *Cache[E] {
-	return &Cache[E]{
-		set: set.New[E](),
+type Option[E comparable] func(*Cache[E])
+
+func New[E comparable](options ...Option[E]) *Cache[E] {
+	c := &Cache[E]{set: set.New[E]()}
+	c.adder = func(e ...E) {
+		c.set.Add(e...)
 	}
+
+	for i := range options {
+		options[i](c)
+	}
+
+	return c
 }
 
 func (cache *Cache[E]) Contains(element E) bool {
@@ -32,28 +70,7 @@ func (cache *Cache[E]) Contains(element E) bool {
 
 // this blows up in a concurrent environment
 func (cache *Cache[E]) Add(elements ...E) {
-	for _, value := range elements {
-		value := value
-
-		cancelChan, ok := cache.cancelMap[value]
-		if ok {
-			close(cancelChan)
-		}
-
-		cache.set.Add(value)
-
-		timer := time.NewTimer(cache.validDuration)
-		cancelChan = make(chan struct{})
-		cache.cancelMap[value] = cancelChan
-		go func() {
-			select {
-			case <-timer.C:
-				cache.set.Delete(value)
-			case <-cancelChan:
-				return
-			}
-		}()
-	}
+	cache.adder(elements...)
 }
 
 func (cache *Cache[E]) Members() []E {
