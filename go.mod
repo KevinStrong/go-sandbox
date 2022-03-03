@@ -1,4 +1,4 @@
-module sandbox
+module go-sandbox
 
 go 1.18
 

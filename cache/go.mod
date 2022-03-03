@@ -1,4 +1,4 @@
-module github.com/kevinstrong/cache
+module cache
 
 go 1.18
 
