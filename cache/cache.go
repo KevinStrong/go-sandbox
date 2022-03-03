@@ -69,7 +69,7 @@ func (cache *Cache[E]) Add(elements ...E) {
 }
 
 func (cache *Cache[E]) Members() []E {
-	return nil // todo
+	return cache.set.Members()
 }
 
 func (cache *Cache[E]) Remove(element E) {
