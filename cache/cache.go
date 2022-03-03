@@ -1,50 +1,40 @@
 package cache
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/kevinstrong/set"
 )
 
 type Cache[E comparable] struct {
-	set   *set.Set[E]
-	adder Add[E]
+	set       *set.Set[E]
+	adder     Add[E]
+	cancelMap map[E]chan struct{}
 }
 
-type Add[E comparable] func(...E)
+type Add[E comparable] func(E)
 
 func WithLifetime[E comparable](expiration time.Duration) Option[E] {
-	cancelMap := map[E]chan struct{}{}
 	return func(c *Cache[E]) {
-		cancelMap = map[E]chan struct{}{}
-		c.adder = func(elements ...E) {
-			for _, value := range elements {
-				value := value
-
-				cancelChan, ok := cancelMap[value]
-				if ok {
-					close(cancelChan)
-				}
-
-				c.set.Add(value)
-
-				timer := time.NewTimer(expiration)
-				cancelChan = make(chan struct{})
-				cancelMap[value] = cancelChan
-				go func() {
-					kevin := value
-					select {
-					case <-timer.C:
-						fmt.Printf("----------Hello!\n")
-						fmt.Printf("----------Timeout of kevin: %v\n", kevin)
-						c.set.Delete(kevin)
-					case <-cancelChan:
-						fmt.Printf("----------Timeout Cancelled for: %v\n", kevin)
-						return
-					}
-				}()
+		c.adder = func(value E) {
+			cancelChan, ok := c.cancelMap[value]
+			if ok {
+				close(cancelChan)
 			}
+
+			c.set.Add(value)
+
+			timer := time.NewTimer(expiration)
+			cancelChan = make(chan struct{})
+			c.cancelMap[value] = cancelChan
+			go func() {
+				select {
+				case <-timer.C:
+					c.set.Delete(value)
+				case <-cancelChan:
+					return
+				}
+			}()
 		}
 	}
 }
@@ -52,9 +42,12 @@ func WithLifetime[E comparable](expiration time.Duration) Option[E] {
 type Option[E comparable] func(*Cache[E])
 
 func New[E comparable](options ...Option[E]) *Cache[E] {
-	c := &Cache[E]{set: set.New[E]()}
-	c.adder = func(e ...E) {
-		c.set.Add(e...)
+	c := &Cache[E]{
+		set:       set.New[E](),
+		cancelMap: map[E]chan struct{}{},
+	}
+	c.adder = func(e E) {
+		c.set.Add(e)
 	}
 
 	for i := range options {
@@ -70,11 +63,13 @@ func (cache *Cache[E]) Contains(element E) bool {
 
 // this blows up in a concurrent environment
 func (cache *Cache[E]) Add(elements ...E) {
-	cache.adder(elements...)
+	for _, element := range elements {
+		cache.adder(element)
+	}
 }
 
 func (cache *Cache[E]) Members() []E {
-	return nil
+	return nil // todo
 }
 
 func (cache *Cache[E]) Remove(element E) {
