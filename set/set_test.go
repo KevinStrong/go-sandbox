@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/kevinstrong/set"
+	"github.com/kevinstrong/go-sandbox/set"
 )
 
 func TestCachePutThingsIn(t *testing.T) {

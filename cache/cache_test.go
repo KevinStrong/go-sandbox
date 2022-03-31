@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kevinstrong/cache"
+	"github.com/kevinstrong/go-sandbox/cache"
 )
 
 func TestCacheExpiration(t *testing.T) {

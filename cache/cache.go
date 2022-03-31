@@ -3,7 +3,7 @@ package cache
 import (
 	"time"
 
-	"github.com/kevinstrong/set"
+	"github.com/kevinstrong/go-sandbox/set"
 )
 
 type Cache[E comparable] struct {
