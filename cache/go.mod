@@ -1,4 +1,4 @@
-module cache
+module github.com/kevinstrong/go-sandbox/cache
 
 go 1.18
 
