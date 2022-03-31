@@ -1,4 +1,4 @@
-module github.com/kevinstrong/set
+module github.com/kevinstrong/go-sandbox/set
 
 go 1.18
 
