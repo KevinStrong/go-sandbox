@@ -1,5 +1,5 @@
-module go-sandbox
+module github.com/kevinstrong/go-sandbox
 
 go 1.18
 
-require github.com/google/go-cmp v0.5.5
+require github.com/google/go-cmp v0.5.7
