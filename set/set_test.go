@@ -4,8 +4,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/KevinStrong/go-sandbox/set"
 	"github.com/google/go-cmp/cmp"
-	"github.com/kevinstrong/go-sandbox/set"
 )
 
 func TestCachePutThingsIn(t *testing.T) {

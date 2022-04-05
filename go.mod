@@ -1,4 +1,4 @@
-module github.com/kevinstrong/go-sandbox
+module github.com/KevinStrong/go-sandbox
 
 go 1.18
 
